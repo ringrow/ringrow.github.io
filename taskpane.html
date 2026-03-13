@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DMARC アナライザー</title>
+<script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    font-size: 13px;
+    color: #201f1e;
+    background: #faf9f8;
+  }
+
+  /* Header */
+  .header {
+    background: #0078d4;
+    color: #fff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .header-icon { font-size: 18px; }
+  .header h1 { margin: 0; font-size: 15px; font-weight: 600; }
+  .header p { margin: 2px 0 0; font-size: 11px; opacity: .85; }
+
+  /* Main */
+  main { padding: 14px 16px; }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 1.5px dashed #c8c6c4;
+    border-radius: 4px;
+    padding: 24px 12px;
+    text-align: center;
+    cursor: pointer;
+    background: #fff;
+    transition: border-color .15s, background .15s;
+    margin-bottom: 14px;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: #0078d4;
+    background: #eff6fc;
+  }
+  .drop-icon { font-size: 28px; margin-bottom: 8px; }
+  .drop-title { font-size: 13px; font-weight: 600; margin: 0 0 3px; color: #201f1e; }
+  .drop-sub { font-size: 11px; color: #605e5c; margin: 0; }
+
+  /* Buttons */
+  .btn-primary {
+    background: #0078d4;
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 8px;
+    transition: background .15s;
+  }
+  .btn-primary:hover { background: #106ebe; }
+  .btn-secondary {
+    background: #fff;
+    color: #0078d4;
+    border: 1px solid #0078d4;
+    border-radius: 2px;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-secondary:hover { background: #eff6fc; }
+
+  /* Metric cards */
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .metric {
+    background: #fff;
+    border: 1px solid #edebe9;
+    border-radius: 4px;
+    padding: 10px 12px;
+  }
+  .metric-label { font-size: 11px; color: #605e5c; margin: 0 0 2px; }
+  .metric-value { font-size: 20px; font-weight: 600; margin: 0; }
+  .metric-value.ok { color: #107c10; }
+  .metric-value.fail { color: #a4262c; }
+  .metric-value.warn { color: #8a8000; }
+
+  /* Section */
+  .section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #605e5c;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin: 14px 0 8px;
+  }
+
+  /* Policy table */
+  .policy-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid #edebe9; border-radius: 4px; overflow: hidden; margin-bottom: 14px; }
+  .policy-table td { padding: 7px 10px; font-size: 12px; border-bottom: 1px solid #f3f2f1; vertical-align: top; }
+  .policy-table tr:last-child td { border-bottom: none; }
+  .policy-table td:first-child { color: #605e5c; width: 45%; }
+  .policy-table td:last-child { font-weight: 600; color: #201f1e; }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 2px;
+    line-height: 1.4;
+  }
+  .b-pass { background: #dff6dd; color: #107c10; }
+  .b-fail { background: #fde7e9; color: #a4262c; }
+  .b-none { background: #edebe9; color: #605e5c; }
+  .b-quarantine { background: #fff4ce; color: #8a8000; }
+  .b-reject { background: #fde7e9; color: #a4262c; }
+
+  /* Record list */
+  .record-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+  .record-card {
+    background: #fff;
+    border: 1px solid #edebe9;
+    border-radius: 4px;
+    padding: 10px 12px;
+    border-left: 3px solid #edebe9;
+  }
+  .record-card.dmarc-pass { border-left-color: #107c10; }
+  .record-card.dmarc-fail { border-left-color: #a4262c; }
+  .record-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .record-ip { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 12px; font-weight: 600; }
+  .record-count { font-size: 11px; color: #605e5c; }
+  .record-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+  .record-badge-label { font-size: 10px; color: #605e5c; display: flex; align-items: center; gap: 3px; }
+
+  /* Bar */
+  .bar-wrap { background: #edebe9; border-radius: 2px; height: 6px; margin-top: 8px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 2px; background: #0078d4; transition: width .4s; }
+  .bar-fill.red { background: #a4262c; }
+
+  /* Error */
+  .error-box {
+    background: #fde7e9;
+    border: 1px solid #f1707b;
+    border-radius: 4px;
+    padding: 10px 12px;
+    color: #a4262c;
+    font-size: 12px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid #edebe9; margin: 14px 0; }
+
+  /* Results hidden by default */
+  #results { display: none; }
+
+  /* Scrollable main on small panels */
+  body { overflow-y: auto; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">🛡️</span>
+  <div>
+    <h1>DMARC アナライザー</h1>
+    <p>認証レポートを解析・可視化</p>
+  </div>
+</div>
+
+<main>
+
+  <!-- Upload -->
+  <div class="drop-zone" id="dropZone">
+    <div class="drop-icon">📋</div>
+    <p class="drop-title">DMARCレポート XMLをドロップ</p>
+    <p class="drop-sub">またはクリックしてファイルを選択</p>
+    <input type="file" id="fileInput" accept=".xml" style="display:none">
+  </div>
+
+  <button class="btn-secondary" id="sampleBtn" style="width:100%;margin-bottom:8px">📊 サンプルデータで試す</button>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <!-- Results -->
+  <div id="results">
+    <div style="background:#fff;border:1px solid #edebe9;border-radius:4px;padding:10px 12px;margin-bottom:14px;">
+      <div style="font-size:11px;color:#605e5c;margin-bottom:2px">レポート期間</div>
+      <div style="font-size:13px;font-weight:600" id="reportPeriod"></div>
+      <div style="font-size:11px;color:#605e5c;margin-top:3px" id="reportOrg"></div>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <p class="metric-label">総メール数</p>
+        <p class="metric-value" id="totalCount">—</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">合格率</p>
+        <p class="metric-value" id="passRate">—</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">DMARC合格</p>
+        <p class="metric-value ok" id="passCount">—</p>
+      </div>
+      <div class="metric">
+        <p class="metric-label">DMARC不合格</p>
+        <p class="metric-value fail" id="failCount">—</p>
+      </div>
+    </div>
+
+    <!-- Pass rate bar -->
+    <div class="bar-wrap" style="height:8px;margin-bottom:14px">
+      <div class="bar-fill" id="passBar" style="width:0%"></div>
+    </div>
+
+    <div class="section-title">ポリシー設定</div>
+    <table class="policy-table" id="policyTable"></table>
+
+    <div class="section-title">送信元IP別 認証結果</div>
+    <div class="record-list" id="recordList"></div>
+
+    <button class="btn-secondary" id="resetBtn" style="width:100%">↩ 別ファイルを読み込む</button>
+  </div>
+
+</main>
+
+<script>
+Office.onReady(() => {
+  // Office is ready — add-in running inside Outlook
+});
+
+const SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
+<feedback>
+  <report_metadata>
+    <org_name>Google LLC</org_name>
+    <email>noreply-dmarc-support@google.com</email>
+    <report_id>12345678901234567890</report_id>
+    <date_range><begin>1700000000</begin><end>1700086400</end></date_range>
+  </report_metadata>
+  <policy_published>
+    <domain>example.com</domain>
+    <adkim>r</adkim><aspf>r</aspf>
+    <p>quarantine</p><sp>none</sp><pct>100</pct>
+  </policy_published>
+  <record>
+    <row><source_ip>203.0.113.1</source_ip><count>42</count>
+      <policy_evaluated><disposition>none</disposition><dkim>pass</dkim><spf>pass</spf></policy_evaluated>
+    </row>
+    <auth_results>
+      <dkim><domain>example.com</domain><result>pass</result></dkim>
+      <spf><domain>example.com</domain><result>pass</result></spf>
+    </auth_results>
+  </record>
+  <record>
+    <row><source_ip>198.51.100.22</source_ip><count>15</count>
+      <policy_evaluated><disposition>quarantine</disposition><dkim>fail</dkim><spf>fail</spf></policy_evaluated>
+    </row>
+    <auth_results>
+      <dkim><domain>phishing.example</domain><result>fail</result></dkim>
+      <spf><domain>phishing.example</domain><result>fail</result></spf>
+    </auth_results>
+  </record>
+  <record>
+    <row><source_ip>192.0.2.55</source_ip><count>8</count>
+      <policy_evaluated><disposition>none</disposition><dkim>pass</dkim><spf>fail</spf></policy_evaluated>
+    </row>
+    <auth_results>
+      <dkim><domain>example.com</domain><result>pass</result></dkim>
+      <spf><domain>mail.example.com</domain><result>fail</result></spf>
+    </auth_results>
+  </record>
+  <record>
+    <row><source_ip>10.0.0.1</source_ip><count>5</count>
+      <policy_evaluated><disposition>reject</disposition><dkim>fail</dkim><spf>fail</spf></policy_evaluated>
+    </row>
+    <auth_results>
+      <dkim><domain>spam.net</domain><result>fail</result></dkim>
+      <spf><domain>spam.net</domain><result>fail</result></spf>
+    </auth_results>
+  </record>
+</feedback>`;
+
+function getText(el, tag) {
+  const n = el.querySelector(tag);
+  return n ? n.textContent.trim() : '';
+}
+
+function parseDMARC(xml) {
+  const doc = new DOMParser().parseFromString(xml, 'application/xml');
+  if (doc.querySelector('parseerror')) throw new Error('XMLの解析に失敗しました');
+
+  const meta = doc.querySelector('report_metadata');
+  const pol = doc.querySelector('policy_published');
+  const records = [...doc.querySelectorAll('record')];
+
+  const fmtTs = ts => ts ? new Date(parseInt(ts) * 1000).toLocaleDateString('ja-JP') : '—';
+  const begin = getText(meta, 'begin');
+  const end = getText(meta, 'end');
+
+  const rows = records.map(r => {
+    const row = r.querySelector('row');
+    const auth = r.querySelector('auth_results');
+    const dkimEval = getText(row, 'dkim');
+    const spfEval = getText(row, 'spf');
+    const dkimResult = getText(auth, 'dkim result') || getText(auth, 'dkim > result');
+    const spfResult = getText(auth, 'spf result') || getText(auth, 'spf > result');
+    // Also try direct child selectors
+    const dkimR = auth ? (auth.querySelector('dkim result') || auth.querySelector('dkim > result') || {textContent:''}).textContent.trim() : '';
+    const spfR = auth ? (auth.querySelector('spf result') || auth.querySelector('spf > result') || {textContent:''}).textContent.trim() : '';
+
+    return {
+      ip: getText(row, 'source_ip'),
+      count: parseInt(getText(row, 'count')) || 0,
+      disp: getText(row, 'disposition'),
+      dkimEval, spfEval,
+      dkimResult: dkimR || dkimResult,
+      spfResult: spfR || spfResult,
+      dmarcPass: dkimEval === 'pass' || spfEval === 'pass'
+    };
+  });
+
+  return {
+    org: getText(meta, 'org_name'),
+    domain: getText(pol, 'domain'),
+    period: `${fmtTs(begin)} 〜 ${fmtTs(end)}`,
+    policy: {
+      p: getText(pol, 'p'),
+      sp: getText(pol, 'sp'),
+      pct: getText(pol, 'pct'),
+      adkim: getText(pol, 'adkim'),
+      aspf: getText(pol, 'aspf'),
+    },
+    rows
+  };
+}
+
+function badge(val, type) {
+  if (!val) return `<span class="badge b-none">—</span>`;
+  const map = { pass:'b-pass', fail:'b-fail', none:'b-none', quarantine:'b-quarantine', reject:'b-reject' };
+  return `<span class="badge ${map[val]||'b-none'}">${val}</span>`;
+}
+
+function render(data) {
+  document.getElementById('reportPeriod').textContent = data.period;
+  document.getElementById('reportOrg').textContent =
+    `レポート送信元: ${data.org || '—'}　ドメイン: ${data.domain || '—'}`;
+
+  const total = data.rows.reduce((s,r) => s+r.count, 0);
+  const pass  = data.rows.filter(r=>r.dmarcPass).reduce((s,r) => s+r.count, 0);
+  const fail  = total - pass;
+  const rate  = total ? Math.round(pass/total*100) : 0;
+
+  document.getElementById('totalCount').textContent = total.toLocaleString();
+  document.getElementById('passCount').textContent  = pass.toLocaleString();
+  document.getElementById('failCount').textContent  = fail.toLocaleString();
+  const rateEl = document.getElementById('passRate');
+  rateEl.textContent = rate + '%';
+  rateEl.className = 'metric-value ' + (rate>=95?'ok':rate>=80?'warn':'fail');
+  document.getElementById('passBar').style.width = rate + '%';
+  document.getElementById('passBar').className = 'bar-fill' + (rate<50?' red':'');
+
+  // Policy
+  const p = data.policy;
+  const modeLabel = v => v==='r'?'Relaxed':v==='s'?'Strict':v||'—';
+  document.getElementById('policyTable').innerHTML = [
+    ['ドメイン', `<code style="font-size:12px">${data.domain||'—'}</code>`],
+    ['ポリシー (p=)', badge(p.p)],
+    ['サブドメイン (sp=)', badge(p.sp)],
+    ['適用率 (pct=)', `${p.pct||'100'}%`],
+    ['DKIMモード', modeLabel(p.adkim)],
+    ['SPFモード', modeLabel(p.aspf)],
+  ].map(([k,v])=>`<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+
+  // Records
+  const maxCount = Math.max(...data.rows.map(r=>r.count), 1);
+  document.getElementById('recordList').innerHTML = data.rows
+    .sort((a,b)=>b.count-a.count)
+    .map(r => {
+      const pct = Math.round(r.count/maxCount*100);
+      return `
+      <div class="record-card ${r.dmarcPass?'dmarc-pass':'dmarc-fail'}">
+        <div class="record-top">
+          <span class="record-ip">${r.ip}</span>
+          <span class="record-count">${r.count.toLocaleString()} 通</span>
+        </div>
+        <div class="record-badges">
+          <span class="record-badge-label">DMARC ${badge(r.dmarcPass?'pass':'fail')}</span>
+          <span class="record-badge-label">SPF ${badge(r.spfResult||r.spfEval)}</span>
+          <span class="record-badge-label">DKIM ${badge(r.dkimResult||r.dkimEval)}</span>
+          <span class="record-badge-label">処分 ${badge(r.disp)}</span>
+        </div>
+        <div class="bar-wrap">
+          <div class="bar-fill ${r.dmarcPass?'':'red'}" style="width:${pct}%"></div>
+        </div>
+      </div>`;
+    }).join('');
+
+  document.getElementById('dropZone').style.display = 'none';
+  document.getElementById('sampleBtn').style.display = 'none';
+  document.getElementById('results').style.display = 'block';
+}
+
+function handleXML(xml) {
+  const eb = document.getElementById('errorBox');
+  try {
+    const data = parseDMARC(xml);
+    eb.style.display = 'none';
+    render(data);
+  } catch(e) {
+    eb.style.display = 'block';
+    eb.textContent = '⚠️ ' + e.message;
+  }
+}
+
+// Events
+const dz = document.getElementById('dropZone');
+const fi = document.getElementById('fileInput');
+
+dz.addEventListener('click', () => fi.click());
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault();
+  dz.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
+});
+fi.addEventListener('change', () => { if (fi.files[0]) readFile(fi.files[0]); });
+
+function readFile(f) {
+  const r = new FileReader();
+  r.onload = e => handleXML(e.target.result);
+  r.readAsText(f);
+}
+
+document.getElementById('sampleBtn').addEventListener('click', () => handleXML(SAMPLE));
+document.getElementById('resetBtn').addEventListener('click', () => {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('sampleBtn').style.display = 'block';
+});
+</script>
+</body>
+</html>
