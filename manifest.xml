@@ -100,9 +100,9 @@
     <Resources>
       <bt:Images>
         <!-- 16×16 / 32×32 / 80×80 の PNG アイコンを用意して URL を差し替えてください -->
-        <bt:Image id="Icon.16x16" DefaultValue="https://ringrow.github.io/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://ringrow.github.io/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://ringrow.github.io/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://ringrow.github.io/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://ringrow.github.io/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://ringrow.github.io/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <!-- ★ taskpane.html を公開するURLに変更してください -->
