@@ -13,9 +13,9 @@
   <DefaultLocale>ja-JP</DefaultLocale>
   <DisplayName DefaultValue="DMARC アナライザー"/>
   <Description DefaultValue="受信DMARCレポートのXMLを解析し、SPF/DKIM/DMARC認証結果を可視化します。"/>
-  <IconUrl DefaultValue="https://YOUR-DOMAIN/assets/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://YOUR-DOMAIN/assets/icon-128.png"/>
-  <SupportUrl DefaultValue="https://YOUR-DOMAIN/support"/>
+  <IconUrl DefaultValue="https://ringrow.github.io/assets/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://ringrow.github.io/assets/icon-128.png"/>
+  <SupportUrl DefaultValue="https://ringrow.github.io/support"/>
 
   <!-- ② 対応ホスト：Outlook のみ -->
   <Hosts>
@@ -34,7 +34,7 @@
     <Form xsi:type="ItemRead">
       <DesktopSettings>
         <!-- ★ここを実際にホストするURLに変更してください -->
-        <SourceLocation DefaultValue="https://YOUR-DOMAIN/taskpane.html"/>
+        <SourceLocation DefaultValue="https://ringrow.github.io/taskpane.html"/>
         <RequestedHeight>550</RequestedHeight>
       </DesktopSettings>
     </Form>
@@ -100,14 +100,14 @@
     <Resources>
       <bt:Images>
         <!-- 16×16 / 32×32 / 80×80 の PNG アイコンを用意して URL を差し替えてください -->
-        <bt:Image id="Icon.16x16" DefaultValue="https://YOUR-DOMAIN/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://YOUR-DOMAIN/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://YOUR-DOMAIN/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://ringrow.github.io/assets/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://ringrow.github.io/assets/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://ringrow.github.io/assets/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <!-- ★ taskpane.html を公開するURLに変更してください -->
-        <bt:Url id="Taskpane.Url"     DefaultValue="https://YOUR-DOMAIN/taskpane.html"/>
-        <bt:Url id="FunctionFile.Url" DefaultValue="https://YOUR-DOMAIN/function-file.html"/>
+        <bt:Url id="Taskpane.Url"     DefaultValue="https://ringrow.github.io/taskpane.html"/>
+        <bt:Url id="FunctionFile.Url" DefaultValue="https://ringrow.github.io/function-file.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GroupLabel"            DefaultValue="DMARC ツール"/>
