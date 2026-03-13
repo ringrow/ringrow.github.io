@@ -13,8 +13,8 @@
   <DefaultLocale>ja-JP</DefaultLocale>
   <DisplayName DefaultValue="DMARC アナライザー"/>
   <Description DefaultValue="受信DMARCレポートのXMLを解析し、SPF/DKIM/DMARC認証結果を可視化します。"/>
-  <IconUrl DefaultValue="https://ringrow.github.io/assets/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://ringrow.github.io/assets/icon-128.png"/>
+  <IconUrl DefaultValue="https://ringrow.github.io/icon-128.png"/>
+  <HighResolutionIconUrl DefaultValue="https://ringrow.github.io/icon-128.png"/>
   <SupportUrl DefaultValue="https://ringrow.github.io/support"/>
 
   <!-- ② 対応ホスト：Outlook のみ -->
